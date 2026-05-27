@@ -34,7 +34,12 @@ export default async function TaskDetailPage({
       <p className="muted">
         <Link href="/tasks">← Back to tasks</Link>
       </p>
-      <h1>{task.title}</h1>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <h1>{task.title}</h1>
+        <Link href={`/tasks/${task.id}/edit`}>
+          <button className="secondary">Edit</button>
+        </Link>
+      </div>
       <p className="muted">
         Assigned to {task.assignedAgent?.name ?? "—"} · created{" "}
         {task.createdAt.toLocaleDateString()}

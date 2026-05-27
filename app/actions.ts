@@ -33,6 +33,43 @@ export async function createTask(formData: FormData) {
   redirect(`/tasks/${task.id}`);
 }
 
+export async function updateTask(formData: FormData) {
+  const id = String(formData.get("taskId") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  if (!id || !title) return;
+
+  const description = String(formData.get("description") ?? "").trim();
+  const assignedAgentId = String(formData.get("assignedAgentId") ?? "");
+  const githubIssueUrl = String(formData.get("githubIssueUrl") ?? "").trim();
+
+  await prisma.task.update({
+    where: { id },
+    data: {
+      title,
+      description: description || null,
+      assignedAgentId: assignedAgentId || null,
+      githubIssueUrl: githubIssueUrl || null,
+    },
+  });
+
+  revalidatePath(`/tasks/${id}`);
+  revalidatePath("/tasks");
+  revalidatePath("/");
+  redirect(`/tasks/${id}`);
+}
+
+export async function deleteTask(formData: FormData) {
+  const id = String(formData.get("taskId") ?? "");
+  if (!id) return;
+
+  // WorkLog and Review cascade on delete (see prisma migration).
+  await prisma.task.delete({ where: { id } });
+
+  revalidatePath("/tasks");
+  revalidatePath("/");
+  redirect("/tasks");
+}
+
 export async function updateTaskStatus(formData: FormData) {
   const taskId = String(formData.get("taskId") ?? "");
   const status = String(formData.get("status") ?? "");
