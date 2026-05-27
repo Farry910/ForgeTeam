@@ -5,8 +5,8 @@ human teammates. ForgeTeam is the workflow shell that moves a task from
 idea → requirement → code → test → PR → review → merge, with a human in the
 loop and the only one who merges to `main`.
 
-This is **v0.1 — the foundation**. Documentation and team roles come first;
-the dashboard app comes next (see [task-002](tasks/task-002.md)).
+**v0.1** ships the foundation docs **and** a working local dashboard
+(Next.js + Prisma + SQLite). See [Running the app](#running-the-app-locally) below.
 
 ## Repository structure
 
@@ -31,6 +31,13 @@ ForgeTeam/
 │   ├── ISSUE_TEMPLATE/            # feature_request, bug_report
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── workflows/ci.yml           # type check · lint · build
+├── app/                           # Next.js App Router (pages + server actions)
+│   ├── page.tsx                   # dashboard
+│   ├── agents/                    # agent list
+│   ├── tasks/                     # task list · new · [id] detail
+│   └── actions.ts                 # createTask · updateStatus · addWorkLog
+├── lib/                           # prisma client + status constants
+├── prisma/                        # schema · migrations · seed
 └── README.md
 ```
 
@@ -45,10 +52,33 @@ ForgeTeam/
 See [docs/engineering-workflow.md](docs/engineering-workflow.md) for the full
 lifecycle and [docs/agent-roles.md](docs/agent-roles.md) for the personas.
 
-## Planned stack (v0.1 app)
+## Running the app locally
 
-Next.js · TypeScript · Prisma · SQLite — one repo, frontend + backend together,
-zero paid services. Tracked in [task-002](tasks/task-002.md).
+Stack: **Next.js · TypeScript · Prisma · SQLite** — one repo, frontend + backend
+together, zero paid services.
+
+```bash
+npm install
+cp .env .env.local   # optional; .env already has DATABASE_URL="file:./dev.db"
+npx prisma migrate dev   # creates dev.db, applies migrations, runs the seed
+npm run dev              # http://localhost:3000
+```
+
+The seed creates three agents — **Alex** (PM), **Sam Rivera** (Dev),
+**Jordan** (QA) — and one sample task with a work log and a review.
+
+Useful scripts: `npm run build`, `npm run typecheck`, `npm run lint`,
+`npm run db:seed`, `npm run db:reset`.
+
+### Features
+- Dashboard with status counts and recent tasks
+- Agent list
+- Task list, create-task form, and task detail
+- Work log timeline (add HUMAN / AI / SYSTEM entries)
+- Status dropdown across the full lifecycle (logged automatically)
+- GitHub Issue / PR links per task
+
+Tracked in [task-002](tasks/task-002.md).
 
 ## Roadmap
 
