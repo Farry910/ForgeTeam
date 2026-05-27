@@ -1,5 +1,22 @@
 # MVP Roadmap
 
+## Status — shipped in v0.1
+
+All four weeks below are delivered, plus extras. Each feature has a ticket in
+[`/tasks`](../tasks) and shipped as its own PR.
+
+- ✅ Foundation: docs, agent profiles, workflow, Next.js + Prisma + SQLite app
+- ✅ Task system: create/edit/delete, assign, status lifecycle, work logs, detail
+- ✅ Status board with filter & search
+- ✅ Agent CRUD
+- ✅ QA review loop (verdict updates task status)
+- ✅ GitHub workflow: issue/PR templates, CI, PR links on tasks
+- ✅ Global activity feed
+- ✅ Vitest unit tests wired into CI
+- ✅ Deploy prep (Render Blueprint + `start:prod`); a live deploy is the next step
+
+Below is the original plan, kept for reference.
+
 ## Week 1 — Foundation
 Create repo, docs, agent profiles, workflow, simple app skeleton.
 
@@ -44,15 +61,15 @@ Deliverables:
 
 At the end of month one, you should have a working prototype.
 
-## First 10 GitHub Issues
+## First 10 GitHub Issues — all shipped
 
-1. Create product vision document
-2. Create AI developer behavior standard
-3. Create initial Next.js app
-4. Add Prisma and SQLite
-5. Add Agent model
-6. Add Task model
-7. Add task list page
-8. Add create task form
-9. Add task detail page with work logs
-10. Add GitHub Actions CI
+1. [x] Create product vision document
+2. [x] Create AI developer behavior standard
+3. [x] Create initial Next.js app
+4. [x] Add Prisma and SQLite
+5. [x] Add Agent model
+6. [x] Add Task model
+7. [x] Add task list page (now a status board)
+8. [x] Add create task form
+9. [x] Add task detail page with work logs
+10. [x] Add GitHub Actions CI
