@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Task } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Idempotent reset of seed data so `npm run db:seed` can be re-run safely.
+  // Idempotent reset so `npm run db:seed` can be re-run safely.
   await prisma.review.deleteMany();
   await prisma.workLog.deleteMany();
   await prisma.task.deleteMany();
@@ -39,53 +39,138 @@ async function main() {
     },
   });
 
-  // One sample task so the dashboard is not empty on first run.
-  const task = await prisma.task.create({
-    data: {
-      title: "Scaffold the ForgeTeam dashboard",
-      description:
-        "Build the Next.js + Prisma + SQLite app: agents, tasks, work logs, status tracking.",
-      status: "PR_OPENED",
-      assignedAgentId: sam.id,
-      githubPrUrl: "",
+  // The roadmap's first 10 issues (docs/mvp-roadmap.md), seeded as an
+  // illustrative snapshot of a team mid-stream so the board fills out.
+  const starters = [
+    {
+      title: "Create product vision document",
+      description: "Write docs/product-vision.md: goal, MVP scope, non-goals.",
+      status: "DEPLOYED",
+      agentId: alex.id,
     },
-  });
+    {
+      title: "Create AI developer behavior standard",
+      description: "Define how AI devs work: plan, branch, test, be honest.",
+      status: "MERGED",
+      agentId: alex.id,
+    },
+    {
+      title: "Create initial Next.js app",
+      description: "Scaffold the Next.js + TypeScript dashboard shell.",
+      status: "MERGED",
+      agentId: sam.id,
+    },
+    {
+      title: "Add Prisma and SQLite",
+      description: "Wire Prisma with a local SQLite datasource.",
+      status: "APPROVED",
+      agentId: sam.id,
+    },
+    {
+      title: "Add Agent model",
+      description: "Agent table: name, role, specialty, style, permissions.",
+      status: "IN_REVIEW",
+      agentId: sam.id,
+    },
+    {
+      title: "Add Task model",
+      description: "Task table with status, assignee, and GitHub links.",
+      status: "PR_OPENED",
+      agentId: sam.id,
+    },
+    {
+      title: "Add task list page",
+      description: "List tasks; later evolve into the status board.",
+      status: "TESTING",
+      agentId: sam.id,
+    },
+    {
+      title: "Add create task form",
+      description: "Form to create a task and assign an agent.",
+      status: "CODING",
+      agentId: sam.id,
+    },
+    {
+      title: "Add task detail page with work logs",
+      description: "Detail view: work-log timeline, status dropdown, reviews.",
+      status: "CHANGES_REQUESTED",
+      agentId: sam.id,
+    },
+    {
+      title: "Add GitHub Actions CI",
+      description: "CI workflow: type check, lint, build on PRs to main.",
+      status: "BACKLOG",
+      agentId: sam.id,
+    },
+  ];
+
+  const tasks: Task[] = [];
+  for (const spec of starters) {
+    tasks.push(
+      await prisma.task.create({
+        data: {
+          title: spec.title,
+          description: spec.description,
+          status: spec.status,
+          assignedAgentId: spec.agentId,
+        },
+      }),
+    );
+  }
+
+  // Activity on the in-flight items so the board reads like real work.
+  const byTitle = (t: string) => tasks.find((x) => x.title.startsWith(t))!;
 
   await prisma.workLog.createMany({
     data: [
       {
-        taskId: task.id,
-        authorType: "AI",
-        authorName: "Alex",
-        message:
-          "Requirement: a local dashboard showing agents, tasks, status, and work logs.",
-      },
-      {
-        taskId: task.id,
+        taskId: byTitle("Add Task model").id,
         authorType: "AI",
         authorName: "Sam Rivera",
-        message:
-          "Technical plan: App Router + server actions, Prisma schema with 4 models, seed data.",
+        message: "Opened PR with the Task schema + migration. Awaiting review.",
       },
       {
-        taskId: task.id,
+        taskId: byTitle("Add task list page").id,
         authorType: "AI",
         authorName: "Sam Rivera",
-        message: "Branch feature/app-skeleton created. Implementing pages.",
+        message: "Implemented the list; running build and a quick smoke test.",
+      },
+      {
+        taskId: byTitle("Add create task form").id,
+        authorType: "AI",
+        authorName: "Sam Rivera",
+        message: "Form wired to a server action; validating required fields.",
+      },
+      {
+        taskId: byTitle("Add task detail page").id,
+        authorType: "AI",
+        authorName: "Jordan",
+        message: "Review: CHANGES_REQUESTED — add timestamps to the work log.",
       },
     ],
   });
 
   await prisma.review.create({
     data: {
-      taskId: task.id,
+      taskId: byTitle("Add Agent model").id,
       reviewerName: "Jordan",
-      verdict: "CHANGES_REQUESTED",
-      comments: "Add README setup steps and confirm the build passes before merge.",
+      verdict: "APPROVED",
+      comments: "Schema is clean and matches the spec. Good to merge.",
     },
   });
 
-  console.log(`Seeded agents: ${[alex.name, sam.name, jordan.name].join(", ")}`);
+  await prisma.review.create({
+    data: {
+      taskId: byTitle("Add task detail page").id,
+      reviewerName: "Jordan",
+      verdict: "CHANGES_REQUESTED",
+      comments: "Work-log entries need timestamps before this can ship.",
+    },
+  });
+
+  console.log(
+    `Seeded ${[alex, sam, jordan].length} agents and ${tasks.length} tasks across the board.`,
+  );
 }
 
 main()
