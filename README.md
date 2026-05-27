@@ -80,6 +80,19 @@ Useful scripts: `npm run build`, `npm run typecheck`, `npm run lint`,
 
 Tracked in [task-002](tasks/task-002.md).
 
+## Deploy
+
+ForgeTeam runs from source on any Node host. Production start:
+
+```bash
+npm ci && npx prisma generate && npm run build
+npm run start:prod   # prisma migrate deploy && next start (honours $PORT)
+```
+
+A Render Blueprint ([render.yaml](render.yaml)) is included. Full guide,
+including the SQLite-persistence caveat on free tiers, is in
+[docs/deploy.md](docs/deploy.md).
+
 ## Roadmap
 
 See [docs/mvp-roadmap.md](docs/mvp-roadmap.md). Week 1 is this foundation.
