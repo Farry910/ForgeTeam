@@ -1,0 +1,57 @@
+// ForgeTeam data model — see docs/engineering-workflow.md
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id                 String   @id @default(cuid())
+  name               String
+  role               String
+  specialty          String?
+  communicationStyle String?
+  permissions        String?
+  createdAt          DateTime @default(now())
+
+  tasks Task[]
+}
+
+model Task {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  status          String   @default("BACKLOG")
+  assignedAgent   Agent?   @relation(fields: [assignedAgentId], references: [id])
+  assignedAgentId String?
+  githubIssueUrl  String?
+  githubPrUrl     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workLogs WorkLog[]
+  reviews  Review[]
+}
+
+model WorkLog {
+  id         String   @id @default(cuid())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId     String
+  authorType String // HUMAN | AI | SYSTEM
+  authorName String
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId       String
+  reviewerName String
+  verdict      String // APPROVED | CHANGES_REQUESTED
+  comments     String?
+  createdAt    DateTime @default(now())
+}
