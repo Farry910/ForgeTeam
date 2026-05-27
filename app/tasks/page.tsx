@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { STATUSES } from "@/lib/status";
+import { taskFilterWhere } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +18,7 @@ export default async function TasksPage({
   ]);
 
   const tasks = await prisma.task.findMany({
-    where: {
-      ...(assignee === "unassigned"
-        ? { assignedAgentId: null }
-        : assignee
-          ? { assignedAgentId: assignee }
-          : {}),
-      ...(q ? { title: { contains: q } } : {}),
-    },
+    where: taskFilterWhere(assignee, q),
     orderBy: { updatedAt: "desc" },
     include: { assignedAgent: true },
   });
