@@ -134,6 +134,59 @@ export async function addReview(formData: FormData) {
   revalidatePath("/");
 }
 
+// --- Agents ---
+
+function agentDataFrom(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const role = String(formData.get("role") ?? "").trim();
+  const specialty = String(formData.get("specialty") ?? "").trim();
+  const communicationStyle = String(formData.get("communicationStyle") ?? "").trim();
+  const permissions = String(formData.get("permissions") ?? "").trim();
+  return {
+    name,
+    role,
+    specialty: specialty || null,
+    communicationStyle: communicationStyle || null,
+    permissions: permissions || null,
+  };
+}
+
+export async function createAgent(formData: FormData) {
+  const data = agentDataFrom(formData);
+  if (!data.name || !data.role) return;
+
+  await prisma.agent.create({ data });
+
+  revalidatePath("/agents");
+  revalidatePath("/");
+  redirect("/agents");
+}
+
+export async function updateAgent(formData: FormData) {
+  const id = String(formData.get("agentId") ?? "");
+  const data = agentDataFrom(formData);
+  if (!id || !data.name || !data.role) return;
+
+  await prisma.agent.update({ where: { id }, data });
+
+  revalidatePath("/agents");
+  revalidatePath("/");
+  redirect("/agents");
+}
+
+export async function deleteAgent(formData: FormData) {
+  const id = String(formData.get("agentId") ?? "");
+  if (!id) return;
+
+  // Assigned tasks are unassigned via FK ON DELETE SET NULL.
+  await prisma.agent.delete({ where: { id } });
+
+  revalidatePath("/agents");
+  revalidatePath("/tasks");
+  revalidatePath("/");
+  redirect("/agents");
+}
+
 export async function updatePrLink(formData: FormData) {
   const taskId = String(formData.get("taskId") ?? "");
   if (!taskId) return;
