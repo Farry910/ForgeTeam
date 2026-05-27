@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { STATUSES, VERDICTS, isStatus, isVerdict } from "./status";
+import {
+  STATUSES,
+  VERDICTS,
+  isStatus,
+  isVerdict,
+  orderStatusCounts,
+} from "./status";
 
 describe("status lifecycle", () => {
   it("starts at BACKLOG and ends at DEPLOYED", () => {
@@ -27,5 +33,22 @@ describe("review verdicts", () => {
     expect(isVerdict("CHANGES_REQUESTED")).toBe(true);
     expect(isVerdict("approved")).toBe(false);
     expect(isVerdict("REJECTED")).toBe(false);
+  });
+});
+
+describe("orderStatusCounts", () => {
+  it("returns all statuses in lifecycle order with zeros by default", () => {
+    const result = orderStatusCounts({});
+    expect(result).toHaveLength(STATUSES.length);
+    expect(result.map((r) => r.status)).toEqual([...STATUSES]);
+    expect(result.every((r) => r.count === 0)).toBe(true);
+  });
+
+  it("fills counts from the map and leaves others at zero", () => {
+    const result = orderStatusCounts({ IN_REVIEW: 3, BACKLOG: 1 });
+    const byStatus = Object.fromEntries(result.map((r) => [r.status, r.count]));
+    expect(byStatus.BACKLOG).toBe(1);
+    expect(byStatus.IN_REVIEW).toBe(3);
+    expect(byStatus.MERGED).toBe(0);
   });
 });
