@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { isStatus } from "@/lib/status";
+import { isStatus, isVerdict, type Verdict } from "@/lib/status";
+
+// A QA verdict maps directly onto a task lifecycle status.
+const VERDICT_STATUS: Record<Verdict, string> = {
+  APPROVED: "APPROVED",
+  CHANGES_REQUESTED: "CHANGES_REQUESTED",
+};
 
 export async function createTask(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -59,6 +65,36 @@ export async function addWorkLog(formData: FormData) {
   });
 
   revalidatePath(`/tasks/${taskId}`);
+}
+
+export async function addReview(formData: FormData) {
+  const taskId = String(formData.get("taskId") ?? "");
+  const verdict = String(formData.get("verdict") ?? "");
+  if (!taskId || !isVerdict(verdict)) return;
+
+  const reviewerName = String(formData.get("reviewerName") ?? "").trim() || "Jordan";
+  const comments = String(formData.get("comments") ?? "").trim();
+
+  await prisma.review.create({
+    data: { taskId, reviewerName, verdict, comments: comments || null },
+  });
+
+  // A review both updates the task status and lands on the work log.
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { status: VERDICT_STATUS[verdict] },
+  });
+  await prisma.workLog.create({
+    data: {
+      taskId,
+      authorType: "AI",
+      authorName: reviewerName,
+      message: `Review: ${verdict}${comments ? ` — ${comments}` : ""}`,
+    },
+  });
+
+  revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/");
 }
 
 export async function updatePrLink(formData: FormData) {

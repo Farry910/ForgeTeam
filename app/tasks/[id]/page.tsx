@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { STATUSES } from "@/lib/status";
+import { STATUSES, VERDICTS } from "@/lib/status";
 import {
+  addReview,
   addWorkLog,
   updatePrLink,
   updateTaskStatus,
@@ -84,18 +85,51 @@ export default async function TaskDetailPage({
       </div>
 
       {/* Reviews */}
-      {task.reviews.length > 0 && (
-        <>
-          <h2>Reviews</h2>
-          {task.reviews.map((r) => (
-            <div className="panel" key={r.id}>
-              <strong>{r.reviewerName}</strong>{" "}
-              <span className="badge">{r.verdict}</span>
-              {r.comments && <p style={{ margin: "8px 0 0" }}>{r.comments}</p>}
-            </div>
-          ))}
-        </>
+      <h2>Reviews</h2>
+      {task.reviews.length === 0 ? (
+        <p className="muted">No reviews yet.</p>
+      ) : (
+        task.reviews.map((r) => (
+          <div className="panel" key={r.id}>
+            <strong>{r.reviewerName}</strong>{" "}
+            <span className="badge">{r.verdict}</span>{" "}
+            <span className="muted" style={{ fontSize: 12 }}>
+              {r.createdAt.toLocaleString()}
+            </span>
+            {r.comments && <p style={{ margin: "8px 0 0" }}>{r.comments}</p>}
+          </div>
+        ))
       )}
+
+      <form action={addReview} className="panel" style={{ marginTop: 12 }}>
+        <input type="hidden" name="taskId" value={task.id} />
+        <div className="row">
+          <div style={{ flex: 1 }}>
+            <label htmlFor="reviewerName">Reviewer</label>
+            <input id="reviewerName" name="reviewerName" defaultValue="Jordan" />
+          </div>
+          <div style={{ width: 200 }}>
+            <label htmlFor="verdict">Verdict</label>
+            <select id="verdict" name="verdict" defaultValue="APPROVED">
+              {VERDICTS.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <label htmlFor="comments">Comments</label>
+        <textarea
+          id="comments"
+          name="comments"
+          placeholder="Bug risks, missing tests, security concerns…"
+        />
+        <button type="submit">Submit review</button>
+        <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+          Submitting sets the task status to match the verdict and logs it.
+        </p>
+      </form>
 
       {/* Work log */}
       <h2>Work log</h2>
