@@ -22,6 +22,7 @@ export default function RootLayout({
           <Link href="/">Dashboard</Link>
           <Link href="/agents">Agents</Link>
           <Link href="/tasks">Tasks</Link>
+          <Link href="/activity">Activity</Link>
         </nav>
         <main className="container">{children}</main>
       </body>
