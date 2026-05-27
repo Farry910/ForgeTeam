@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { STATUSES } from "@/lib/status";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +10,15 @@ export default async function TasksPage() {
     include: { assignedAgent: true },
   });
 
+  type TaskRow = (typeof tasks)[number];
+  const byStatus: Record<string, TaskRow[]> = {};
+  for (const s of STATUSES) byStatus[s] = [];
+  for (const t of tasks) (byStatus[t.status] ??= []).push(t);
+
   return (
     <div>
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <h1>Tasks</h1>
+        <h1>Board</h1>
         <Link href="/tasks/new">
           <button>New task</button>
         </Link>
@@ -23,32 +29,34 @@ export default async function TasksPage() {
           No tasks yet. <Link href="/tasks/new">Create the first one.</Link>
         </p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Assigned</th>
-              <th>Status</th>
-              <th>Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((t) => (
-              <tr key={t.id}>
-                <td>
-                  <Link href={`/tasks/${t.id}`}>{t.title}</Link>
-                </td>
-                <td className="muted">{t.assignedAgent?.name ?? "—"}</td>
-                <td>
-                  <span className="badge">{t.status}</span>
-                </td>
-                <td className="muted">
-                  {t.updatedAt.toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="board">
+          {STATUSES.map((status) => {
+            const column = byStatus[status] ?? [];
+            return (
+              <div className="board-col" key={status}>
+                <div className="board-col-header">
+                  <span>{status}</span>
+                  <span className="badge">{column.length}</span>
+                </div>
+                {column.length === 0 ? (
+                  <div className="board-col-empty">—</div>
+                ) : (
+                  column.map((t) => (
+                    <Link className="card" href={`/tasks/${t.id}`} key={t.id}>
+                      <div>{t.title}</div>
+                      <div
+                        className="muted"
+                        style={{ fontSize: 12, marginTop: 4 }}
+                      >
+                        {t.assignedAgent?.name ?? "Unassigned"}
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
