@@ -19,6 +19,13 @@ export function isStatus(value: string): value is Status {
   return (STATUSES as readonly string[]).includes(value);
 }
 
+// Pair each lifecycle status with its count (0 when absent), in lifecycle order.
+export function orderStatusCounts(
+  counts: Record<string, number>,
+): { status: Status; count: number }[] {
+  return STATUSES.map((status) => ({ status, count: counts[status] ?? 0 }));
+}
+
 // Review verdicts — see agents/qa-agent.md
 export const VERDICTS = ["APPROVED", "CHANGES_REQUESTED"] as const;
 
